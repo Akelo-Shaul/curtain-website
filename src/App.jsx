@@ -1,4 +1,4 @@
-import Navbar from "./components/Navbar"
+import BottomNav from "./components/BottomNav"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useRef, useState } from "react";
@@ -193,7 +193,6 @@ function App() {
         start: "top -60%",
         end: "top -100%", // Extended to allow scroll-controlled fade
         scrub: true,
-        markers: true,
       }
     });
 
@@ -557,6 +556,9 @@ function App() {
 
   return (
     <div className="w-full">
+      {/* Fixed Bottom Navigation */}
+      <BottomNav />
+
       {/* Hero Section */}
       <section className="relative w-full h-screen bg-[#927C7C]  p-6 overflow-hidden">
         {/* Mobile: Full background image, Desktop: Contained image */}
@@ -572,28 +574,18 @@ function App() {
           
         {/* Content Wrapper */}
         <div className="relative z-10 h-full flex flex-col justify-between">
-          <div className="flex justify-between items-start">      
+          <div className="flex justify-between items-start">
             <h2 className="text-5xl md:text-3xl font-bold text-white">Alhua</h2>
-            {/* Mobile: Vertical Navbar on right. Hidden desktop */}
-            <div className="md:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-end px-6">
-              <Navbar />
-            </div>
           </div>
-          {/* <div className="absolute md:bottom-[0]">
-            <Navbar />
-          </div> */}
           <div className="text-white">
             <h3 className="text-6xl md:text-8xl font-semibold">Ah Hulaker</h3>
             <p className="md:text-3xl md:mb-16">Exclusive Modern Drawer Curtains</p>
-          </div>
-          <div className="absolute bottom-0 hidden md:block w-full">
-            <Navbar />
           </div>
         </div>
       </section>
 
       {/* Gallery Section */}
-      <section ref={galleryRef} className="relative w-full h-[180vh] bg-[#BEB9A9] p-6 overflow-hidden">
+      <section id="gallery" ref={galleryRef} className="relative w-full h-[180vh] bg-[#BEB9A9] p-6 overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start">
           <div className="">
             <h2 className="text-4xl md:text-6xl font-bold text-white  z-10">Made for lasting impression</h2>
@@ -700,7 +692,7 @@ function App() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={`top-${i}`}
-                  className="flex-shrink-0 w-64 h-64 md:w-80 md:h-80 bg-gray-300 rounded-lg"
+                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 rounded-lg"
                 >
                   {/* Image will go here */}
                 </div>
@@ -715,7 +707,7 @@ function App() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={`bottom-${i}`}
-                  className="flex-shrink-0 w-64 h-64 md:w-80 md:h-80 bg-gray-300 rounded-lg"
+                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 rounded-lg"
                 >
                   {/* Image will go here */}
                 </div>
@@ -785,19 +777,16 @@ function App() {
       </section>
 
       {/* Why choose us section */}
-      <section className="p-6 h-screen flex flex-col justify-evenly bg-[#BEB9A9]">
+      <section id="about-us" className="p-6 py-12 md:py-6 min-h-screen flex flex-col justify-evenly gap-8 md:gap-0 bg-[#BEB9A9]">
         <div className="flex flex-row items-center gap-5">
           <div className="w-[16px] h-[16px] rounded-full bg-black z-10"></div>
           <p className="text-[16px] font-bold tracking-[4px] z-10">Why Choose Us</p>
         </div>
-        <div className="h-[20px]"></div>
         <div className="md:w-[80%]">
           <h2 className="text-[24px] font-bold tracking-[5px]">We design, measure, create and install. We transform homes and offices across Nairobi with custom curtains that blend style with function.</h2>
         </div>
-        <div className="h-[20px]"></div>
-        <div className="md:w-[80%] flex flex-col ml-auto">
+        <div className="md:w-[80%] flex flex-col ml-auto gap-8 md:gap-5">
           <p>We go beyond simply selling fabric. We listen to your vision, understand your space, and craft window treatments that elevate your environment. From the homeowner seeking privacy and elegance, to the business owner creating professional spaces—we bring expertise, quality craftsmanship, and attention to detail that turns your windows into statement pieces. Our clients don't just buy curtains, they invest in transformation.</p>
-          <div className="h-[20px]"></div>
           <div className="flex flex-row gap-10">
             <div>
               <div className="flex flex-row items-center">
@@ -820,7 +809,7 @@ function App() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="p-6 h-screen flex flex-col justify-center overflow-hidden">
+      <section id="testimonials" className="p-6 h-screen flex flex-col justify-center overflow-hidden">
         <div className="flex flex-row items-center gap-5">
           <div className="w-[16px] h-[16px] rounded-full bg-black z-10"></div>
           <p className="text-[16px] font-bold tracking-[4px] z-10">Testimonials</p>
@@ -958,7 +947,7 @@ function App() {
       </section>
 
       {/* Contact Section */}
-      <section className="p-6 py-12 bg-[#BEB9A9]">
+      <section id="contact" className="p-6 py-12 bg-[#BEB9A9]">
         {/* Header */}
         <div className="flex flex-row items-center gap-5 mb-8">
           <div className="w-[16px] h-[16px] rounded-full bg-black"></div>
