@@ -30,8 +30,7 @@ function App() {
   const contentRefs = useRef([]);
   const [testimonialIndices, setTestimonialIndices] = useState([0, 1, 2, 3]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const dragInstancesRef = useRef([]);
-  const autoPlayIntervalRef = useRef(null);
+  const dragInstanceRef = useRef(null);
 
   // 8 floating images - 4 on left side, 4 on right side of the cone
   const floatingImage1Ref = useRef(null);
@@ -292,11 +291,11 @@ function App() {
       "reveal" // Starts at the same time as circle fade out
     );
 
-    // Testimonials carousel - drag functionality
+    // Testimonials carousel - draggable card contents with GSAP
     if (!carouselContainerRef.current) return;
 
-    let autoPlayDirection = 1; // 1 = forward (left), -1 = backward (right)
-    let isAnimating = false;
+    let autoPlayInterval;
+    const dragInstances = [];
 
     // Auto-advance testimonials
     const advanceTestimonials = (direction = 1) => {
@@ -311,151 +310,157 @@ function App() {
     };
 
     // Create Draggable instances for card contents
-    const createDraggables = () => {
-      // Clean up old instances
-      dragInstancesRef.current.forEach(instance => instance && instance.kill());
-      dragInstancesRef.current = [];
+    let isDragging = false;
 
-      contentRefs.current.forEach((contentEl, index) => {
-        if (!contentEl) return;
+    contentRefs.current.forEach((contentEl, index) => {
+      if (!contentEl) return;
 
-        const dragInstance = Draggable.create(contentEl, {
-          type: "x",
-          bounds: { minX: -150, maxX: 150 },
-          inertia: false,
-          allowNativeTouchScrolling: false,
-          edgeResistance: 0.65,
-          cursor: "grab",
-          activeCursor: "grabbing",
-          onDragStart: function() {
-            clearInterval(autoPlayIntervalRef.current);
-            isAnimating = false;
-          },
-          onDrag: function() {
-            const currentDragX = this.x;
-            // Sync all card contents to move together
-            contentRefs.current.forEach((el, idx) => {
-              if (el && idx !== index) {
-                gsap.set(el, { x: currentDragX });
+      let dragStartX = 0;
+
+      const dragInstance = Draggable.create(contentEl, {
+        type: "x",
+        bounds: { minX: -150, maxX: 150 },
+        inertia: false,
+        allowNativeTouchScrolling: false,
+        edgeResistance: 0.65,
+        onPress: function() {
+          clearInterval(autoPlayInterval);
+          isDragging = true;
+          dragStartX = this.x;
+        },
+        onDrag: function() {
+          const currentDragX = this.x;
+
+          // Sync all card contents to move together in the same direction
+          contentRefs.current.forEach((el, idx) => {
+            if (el && idx !== index) {
+              gsap.set(el, { x: currentDragX });
+            }
+          });
+        },
+        onRelease: function() {
+          const dragDistance = this.x - dragStartX;
+          isDragging = false;
+
+          // If dragged significantly, advance or go back
+          if (Math.abs(dragDistance) > 50) {
+            const direction = dragDistance < 0 ? 1 : -1;
+
+            // Animate all card contents out in drag direction
+            const exitX = dragDistance < 0 ? -400 : 400;
+            contentRefs.current.forEach(el => {
+              if (el) {
+                gsap.to(el, {
+                  x: exitX,
+                  opacity: 0,
+                  duration: 0.4,
+                  ease: "power2.in"
+                });
               }
             });
-          },
-          onDragEnd: function() {
-            const dragDistance = this.x;
 
-            // If dragged significantly, change testimonials
-            if (Math.abs(dragDistance) > 50) {
-              isAnimating = true;
-              // Drag RIGHT (positive) = previous, Drag LEFT (negative) = next
-              const direction = dragDistance > 0 ? -1 : 1;
-              autoPlayDirection = direction; // Update auto-play direction
-
-              // Animate out in drag direction
-              contentRefs.current.forEach(el => {
-                if (el) {
-                  gsap.to(el, {
-                    x: dragDistance > 0 ? 400 : -400,
-                    opacity: 0,
-                    duration: 0.35,
-                    ease: "power2.inOut"
-                  });
-                }
-              });
-
-              // Change testimonials after animation
-              setTimeout(() => {
-                advanceTestimonials(direction);
-
-                // Animate in from opposite side after short delay
-                setTimeout(() => {
-                  contentRefs.current.forEach(el => {
-                    if (el) {
-                      gsap.fromTo(el,
-                        { x: dragDistance > 0 ? -400 : 400, opacity: 0 },
-                        { x: 0, opacity: 1, duration: 0.35, ease: "power2.out", onComplete: () => {
-                          isAnimating = false;
-                        }}
-                      );
-                    }
-                  });
-                  // Recreate draggables after animation
-                  setTimeout(() => {
-                    if (!isAnimating) createDraggables();
-                  }, 400);
-                }, 80);
-              }, 350);
-            } else {
-              // Snap back to center
-              contentRefs.current.forEach(el => {
-                if (el) {
-                  gsap.to(el, { x: 0, duration: 0.35, ease: "power2.out" });
-                }
-              });
-            }
-
-            // Restart auto-play after delay
+            // Change testimonials and animate in from opposite side
             setTimeout(() => {
-              if (!isAnimating) {
-                autoPlayIntervalRef.current = setInterval(() => {
-                  if (isAnimating) return;
-                  isAnimating = true;
+              advanceTestimonials(direction);
 
-                  contentRefs.current.forEach(el => {
-                    if (el) {
-                      gsap.to(el, {
-                        x: autoPlayDirection === 1 ? -400 : 400,
-                        opacity: 0,
-                        duration: 0.35,
-                        ease: "power2.inOut"
-                      });
-                    }
-                  });
-
-                  setTimeout(() => {
-                    advanceTestimonials(autoPlayDirection);
-
-                    setTimeout(() => {
-                      contentRefs.current.forEach(el => {
-                        if (el) {
-                          gsap.fromTo(el,
-                            { x: autoPlayDirection === 1 ? 400 : -400, opacity: 0 },
-                            { x: 0, opacity: 1, duration: 0.35, ease: "power2.out", onComplete: () => {
-                              isAnimating = false;
-                            }}
-                          );
+              // Animate new content in from opposite side
+              const enterX = dragDistance < 0 ? 400 : -400;
+              setTimeout(() => {
+                contentRefs.current.forEach((el, elIdx) => {
+                  if (el) {
+                    gsap.set(el, { x: enterX, opacity: 0 });
+                    gsap.to(el, {
+                      x: 0,
+                      opacity: 1,
+                      duration: 0.4,
+                      ease: "power2.out",
+                      onComplete: () => {
+                        // Update Draggable to sync with new position for continued dragging
+                        if (elIdx === 0) {
+                          dragInstances.forEach(instance => {
+                            if (instance) instance.update();
+                          });
                         }
-                      });
-                      // Recreate draggables
-                      setTimeout(() => {
-                        if (!isAnimating) createDraggables();
-                      }, 400);
-                    }, 80);
-                  }, 350);
-                }, 3500);
+                      }
+                    });
+                  }
+                });
+              }, 50);
+            }, 400);
+          } else {
+            // If not dragged enough, snap all contents back to center
+            contentRefs.current.forEach(el => {
+              if (el) {
+                gsap.to(el, {
+                  x: 0,
+                  duration: 0.4,
+                  ease: "elastic.out(1, 0.5)"
+                });
               }
-            }, 1000);
+            });
           }
-        })[0];
 
-        dragInstancesRef.current.push(dragInstance);
-      });
-    };
+          // Restart auto-play
+          setTimeout(() => {
+            if (!isDragging) {
+              autoPlayInterval = setInterval(() => {
+                // Animate all card contents out to the left
+                contentRefs.current.forEach(el => {
+                  if (el) {
+                    gsap.to(el, {
+                      x: -400,
+                      opacity: 0,
+                      duration: 0.4,
+                      ease: "power2.in"
+                    });
+                  }
+                });
 
-    // Initial draggable setup
-    createDraggables();
+                setTimeout(() => {
+                  advanceTestimonials(1);
+
+                  // Animate in from right
+                  setTimeout(() => {
+                    contentRefs.current.forEach((el, elIdx) => {
+                      if (el) {
+                        gsap.set(el, { x: 400, opacity: 0 });
+                        gsap.to(el, {
+                          x: 0,
+                          opacity: 1,
+                          duration: 0.4,
+                          ease: "power2.out",
+                          onComplete: () => {
+                            // Update Draggable to sync with new position
+                            if (elIdx === 0) {
+                              dragInstances.forEach(instance => {
+                                if (instance) instance.update();
+                              });
+                            }
+                          }
+                        });
+                      }
+                    });
+                  }, 50);
+                }, 400);
+              }, 4000);
+            }
+          }, 600);
+        }
+      })[0];
+
+      dragInstances.push(dragInstance);
+    });
 
     // Start auto-play
-    autoPlayIntervalRef.current = setInterval(() => {
-      if (isAnimating) return;
-      isAnimating = true;
-
+    autoPlayInterval = setInterval(() => {
+      // Animate all card contents out to the left
       contentRefs.current.forEach(el => {
         if (el) {
           gsap.to(el, {
             x: -400,
             opacity: 0,
-            duration: 0.35,
-            ease: "power2.inOut"
+            duration: 0.4,
+            ease: "power2.in"
           });
         }
       });
@@ -463,30 +468,37 @@ function App() {
       setTimeout(() => {
         advanceTestimonials(1);
 
+        // Animate in from right
         setTimeout(() => {
-          contentRefs.current.forEach(el => {
+          contentRefs.current.forEach((el, elIdx) => {
             if (el) {
-              gsap.fromTo(el,
-                { x: 400, opacity: 0 },
-                { x: 0, opacity: 1, duration: 0.35, ease: "power2.out", onComplete: () => {
-                  isAnimating = false;
-                }}
-              );
+              gsap.set(el, { x: 400, opacity: 0 });
+              gsap.to(el, {
+                x: 0,
+                opacity: 1,
+                duration: 0.4,
+                ease: "power2.out",
+                onComplete: () => {
+                  // Update Draggable to sync with new position
+                  if (elIdx === 0) {
+                    dragInstances.forEach(instance => {
+                      if (instance) instance.update();
+                    });
+                  }
+                }
+              });
             }
           });
-          // Recreate draggables after content changes
-          setTimeout(() => {
-            if (!isAnimating) createDraggables();
-          }, 400);
-        }, 80);
-      }, 350);
-    }, 3500);
+        }, 50);
+      }, 400);
+    }, 4000);
 
     // Cleanup
     return () => {
-      clearInterval(autoPlayIntervalRef.current);
-      dragInstancesRef.current.forEach(instance => instance && instance.kill());
+      clearInterval(autoPlayInterval);
+      dragInstances.forEach(instance => instance && instance.kill());
     };
+
   }, []);
 
   return (
@@ -777,7 +789,7 @@ function App() {
                 const testimonial = testimonials[testimonialIndex];
                 return (
                   <div
-                    key={`mobile-${testimonialIndex}`}
+                    key="mobile-card"
                     className="rounded-lg bg-gray-200 p-6 mx-auto overflow-hidden"
                     style={{
                       width: '90vw',
@@ -823,7 +835,7 @@ function App() {
 
               return (
                 <div
-                  key={`desktop-${testimonialIndex}-${cardPosition}`}
+                  key={`desktop-card-${cardPosition}`}
                   className={`hidden md:block rounded-lg bg-gray-200 p-6 flex-shrink-0 relative transition-all duration-500 ${scaleValue} ${opacityValue} overflow-hidden`}
                   style={{
                     width: widthValue,
