@@ -13,6 +13,7 @@ import { Draggable } from "gsap/Draggable";
 import { CgArrowTopRight } from "react-icons/cg";
 import { IoPeople } from "react-icons/io5";
 import { MdLocationPin } from "react-icons/md";
+import { FaTiktok, FaWhatsapp } from "react-icons/fa";
 
 gsap.registerPlugin(useGSAP,ScrollTrigger,ScrollSmoother,ScrollToPlugin,SplitText,Draggable);
 
@@ -31,6 +32,11 @@ function App() {
   const [testimonialIndices, setTestimonialIndices] = useState([0, 1, 2, 3]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const dragInstanceRef = useRef(null);
+
+  // Ad section refs
+  const adSectionRef = useRef(null);
+  const adContainerRef = useRef(null);
+  const skipAdButtonRef = useRef(null);
 
   // 8 floating images - 4 on left side, 4 on right side of the cone
   const floatingImage1Ref = useRef(null);
@@ -501,6 +507,54 @@ function App() {
 
   }, []);
 
+  // Ad section scroll animation
+  useGSAP(() => {
+    if (!adSectionRef.current || !adContainerRef.current || !skipAdButtonRef.current) return;
+
+    // Set initial state - full container, no border radius, button hidden
+    gsap.set(adContainerRef.current, {
+      borderRadius: 0,
+      margin: 0,
+      width: "100%",
+      height: "100%"
+    });
+    gsap.set(skipAdButtonRef.current, {
+      opacity: 0,
+      y: -20
+    });
+
+    // Create scroll-triggered animation
+    const adTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: adSectionRef.current,
+        start: "top top",
+        end: "+=50%",
+        scrub: 1,
+        pin: true,
+        pinSpacing: true,
+      }
+    });
+
+    // Animate container to inset with rounded corners
+    adTl.to(adContainerRef.current, {
+      borderRadius: "2rem",
+      margin: "3rem",
+      width: "calc(100% - 6rem)",
+      height: "calc(100% - 6rem)",
+      ease: "power2.out",
+      duration: 1
+    });
+
+    // Fade in skip ad button
+    adTl.to(skipAdButtonRef.current, {
+      opacity: 1,
+      y: 0,
+      ease: "power2.out",
+      duration: 0.5
+    }, "-=0.5"); // Start slightly before container animation ends
+
+  }, []);
+
   return (
     <div className="w-full">
       {/* Hero Section */}
@@ -871,6 +925,129 @@ function App() {
         </div>
 
 
+      </section>
+
+      {/* Ad Section - Full to inset on scroll */}
+      <section
+        ref={adSectionRef}
+        className="relative w-full h-screen bg-[#FFEFB5] overflow-hidden"
+      >
+        {/* Skip Ad Button */}
+        <button
+          ref={skipAdButtonRef}
+          className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-[#FFEFB5] text-black px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
+        >
+          <span className="text-sm font-medium">Skip ad</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v6.62c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L5.055 7.061zM19.5 12.75a.75.75 0 00-.75-.75H16.5a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75zm-3-3a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75zm0 6a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75z" />
+          </svg>
+        </button>
+
+        {/* Ad Container - animates from full to inset */}
+        <div
+          ref={adContainerRef}
+          className="absolute inset-0 bg-[#B85C38]"
+        >
+          {/* Ad content goes here */}
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="p-6 py-12 bg-[#BEB9A9]">
+        {/* Header */}
+        <div className="flex flex-row items-center gap-5 mb-8">
+          <div className="w-[16px] h-[16px] rounded-full bg-black"></div>
+          <p className="text-[16px] font-bold tracking-[4px]">Get In Touch</p>
+        </div>
+
+        {/* Content - Two columns on desktop */}
+        <div className="flex flex-col md:flex-row md:gap-16">
+          {/* Left Column - Text and Social Icons */}
+          <div className="flex flex-col justify-between md:w-[50%] mb-8 md:mb-0">
+            <div></div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Speak to us</h2>
+              <p className="text-base mb-8">
+                Tell us how we can upgrade your space into something elegant
+              </p>
+            </div>
+            {/* Social Icons */}
+            <div className="flex flex-row gap-6">
+              <a href="#" className="text-black hover:opacity-70 transition-opacity">
+                <FaTiktok size={30} />
+              </a>
+              <a href="#" className="text-black hover:opacity-70 transition-opacity">
+                <FaWhatsapp size={30} />
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column - Form */}
+          <div className="md:w-[50%]">
+            <form className="flex flex-col gap-6">
+              {/* First row - First name & Second name */}
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <label className="block text-sm mb-2">First name</label>
+                  <input
+                    type="text"
+                    className="w-full bg-transparent border-b border-black/40 py-2 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm mb-2">Second name</label>
+                  <input
+                    type="text"
+                    className="w-full bg-transparent border-b border-black/40 py-2 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Second row - Email & Phone */}
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <label className="block text-sm mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    className="w-full bg-transparent border-b border-black/40 py-2 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm mb-2">Phone number</label>
+                  <input
+                    type="tel"
+                    className="w-full bg-transparent border-b border-black/40 py-2 focus:outline-none focus:border-black transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Third row - Project Details */}
+              <div>
+                <label className="block text-sm mb-2">Project Details</label>
+                <input
+                  type="text"
+                  className="w-full bg-transparent border-b border-black/40 py-2 focus:outline-none focus:border-black transition-colors"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="mt-4">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 bg-[#FFEFB5] text-black px-6 py-3 rounded-md font-medium hover:bg-[#f5e5a5] transition-colors"
+                >
+                  <span className="tracking-wider text-sm">SEND INQUIRY</span>
+                  <CgArrowTopRight size={18} />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </section>
     </div>
   )
