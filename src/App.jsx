@@ -106,6 +106,9 @@ function App() {
       }
     });
 
+    // Store reference for navigation control (so BottomNav can scroll to start)
+    window.galleryScrollTrigger = tl.scrollTrigger;
+
     // Animate top row - starts from left, scrolls right (moving left)
     tl.fromTo(scrollRightRef.current,
       { x: 0 },

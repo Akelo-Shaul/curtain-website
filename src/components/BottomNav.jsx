@@ -42,8 +42,16 @@ const BottomNav = () => {
       // naturally shows the fully-revealed content (progress=1).
       // Scrolling to the element top would land at progress=0 where content is hidden.
       const revealEnd = window.servicesRevealTl?.scrollTrigger?.end;
+
+      // For gallery, scroll to the START of its ScrollTrigger so the scrub
+      // resets to progress=0 (initial state with all images visible).
+      // Without this, navigating from sections below lands at the end state.
+      const galleryStart = window.galleryScrollTrigger?.start;
+
       const scrollTarget = (target === '#services' && revealEnd)
         ? { y: revealEnd }
+        : (target === '#gallery' && galleryStart != null)
+        ? { y: galleryStart }
         : { y: element, offsetY: 0 };
 
       // When navigating to gallery (before services), hide the circle during
