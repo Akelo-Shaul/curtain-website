@@ -1,8 +1,9 @@
 import BottomNav from "./components/BottomNav"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { testimonials } from "./data/testimonials";
+import { Link, useLocation } from "react-router-dom";
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 // ScrollSmoother requires ScrollTrigger
@@ -18,6 +19,7 @@ import { FaTiktok, FaWhatsapp } from "react-icons/fa";
 gsap.registerPlugin(useGSAP,ScrollTrigger,ScrollSmoother,ScrollToPlugin,SplitText,Draggable);
 
 function App() {
+  const location = useLocation();
   const galleryRef = useRef(null);
   const scrollRightRef = useRef(null);
   const scrollLeftRef = useRef(null);
@@ -47,6 +49,40 @@ function App() {
   const floatingImage6Ref = useRef(null);
   const floatingImage7Ref = useRef(null);
   const floatingImage8Ref = useRef(null);
+
+  // Handle hash navigation from other pages
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.querySelector(location.hash);
+      if (element) {
+        // Delay to ensure page is fully loaded
+        setTimeout(() => {
+          gsap.to(window, {
+            duration: 1,
+            scrollTo: { y: element, offsetY: 0 },
+            ease: "power2.inOut"
+          });
+        }, 100);
+      }
+    }
+  }, [location.hash]);
+
+  // Handle viewport resize - refresh ScrollTrigger to recalculate positions
+  useEffect(() => {
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, []);
 
   useGSAP(() => {
     if (!galleryRef.current || !scrollRightRef.current || !scrollLeftRef.current || !centerTextRef.current ||
@@ -182,16 +218,16 @@ function App() {
     // Services section animation - circle drop and expand reveal
     if (!servicesRef.current || !circleRef.current || !servicesContentRef.current) return;
 
-    // Hide services section initially - it will be revealed only when circle covers it
+    // Services starts with transparent bg - circle provides the color during animation
     gsap.set(servicesRef.current, {
-      visibility: "hidden"
+      backgroundColor: "transparent"
     });
 
     const servicesTl = gsap.timeline({
       scrollTrigger: {
         trigger: galleryRef.current,
         start: "top -60%",
-        end: "top -100%", // Extended to allow scroll-controlled fade
+        end: "top -100%",
         scrub: true,
       }
     });
@@ -209,15 +245,9 @@ function App() {
         ease: "power2.in",
         duration: 2
       }
-    )
-    .to(circleRef.current,
-      {
-        opacity: 1,
-        duration: 0.01
-      }
     );
 
-    // Second: Expand circle to fill screen
+    // Second: Expand circle to fill screen (covers gallery)
     servicesTl.to(circleRef.current,
       {
         scale: 30,
@@ -229,30 +259,23 @@ function App() {
     // Add label for snap point after circle expansion
     servicesTl.addLabel("snapPoint");
 
-    // Snap services section to top when it comes into viewport (only when scrolling down)
-    let snapComplete = false;
+    // Snap services section to top when it comes into viewport
     ScrollTrigger.create({
       trigger: servicesRef.current,
       start: "top bottom-=120",
       end: "top top",
       onEnter: () => {
+        // Skip snap if navigation is already scrolling programmatically
+        if (window._navScrolling) return;
         gsap.to(window, {
           scrollTo: { y: servicesRef.current, offsetY: 0 },
           duration: 0.6,
-          ease: "power2.inOut",
-          onComplete: () => {
-            snapComplete = true;
-            // Reveal services section after snap (now hidden by expanded circle)
-            gsap.to(servicesRef.current, {
-              visibility: "visible",
-              duration: 0.01
-            });
-          }
+          ease: "power2.inOut"
         });
       }
     });
 
-    // Create reveal timeline that only progresses after snap
+    // Create reveal timeline that progresses after snap
     const revealTl = gsap.timeline({
       scrollTrigger: {
         trigger: servicesRef.current,
@@ -264,24 +287,31 @@ function App() {
       }
     });
 
-    // Keep circle at full opacity initially
-    revealTl.to(circleRef.current,
+    // Store reference for navigation control
+    window.servicesRevealTl = revealTl;
+    window.servicesSection = servicesRef.current;
+    window.servicesContent = servicesContentRef.current;
+    window.revealCircle = circleRef.current;
+
+    // Set services background color (same as circle - seamless transition)
+    revealTl.to(servicesRef.current,
       {
-        opacity: 1,
-        duration: 0.5
+        backgroundColor: "#FFEFB5",
+        duration: 0.01
       }
     );
 
-    // Fade out circle and fade in services content simultaneously (scroll-controlled)
+    // Fade out circle (invisible since same color as services bg now)
     revealTl.to(circleRef.current,
       {
         opacity: 0,
         ease: "power2.out",
-        duration: 2
+        duration: 1
       },
-      "reveal" // Label for simultaneous animations
+      "reveal"
     );
 
+    // Fade in services content
     revealTl.fromTo(servicesContentRef.current,
       {
         opacity: 0,
@@ -293,7 +323,7 @@ function App() {
         ease: "power2.out",
         duration: 2
       },
-      "reveal" // Starts at the same time as circle fade out
+      "reveal"
     );
 
     // Testimonials carousel - draggable card contents with GSAP
@@ -608,7 +638,7 @@ function App() {
           {/* Left side images - 4 images stacked in depth */}
           <div
             ref={floatingImage1Ref}
-            className="absolute top-[10%] left-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[17%] md:top-[10%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
             style={{ zIndex: 1 }}
           >
             {/* Image container 1 */}
@@ -616,7 +646,7 @@ function App() {
 
           <div
             ref={floatingImage3Ref}
-            className="absolute top-[15%] left-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[22%] md:top-[15%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
             style={{ zIndex: 2 }}
           >
             {/* Image container 3 */}
@@ -624,7 +654,7 @@ function App() {
 
           <div
             ref={floatingImage5Ref}
-            className="absolute top-[20%] left-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[27%] md:top-[20%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
             style={{ zIndex: 3 }}
           >
             {/* Image container 5 */}
@@ -632,7 +662,7 @@ function App() {
 
           <div
             ref={floatingImage7Ref}
-            className="absolute top-[25%] left-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[32%] md:top-[25%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
             style={{ zIndex: 4 }}
           >
             {/* Image container 7 */}
@@ -641,7 +671,7 @@ function App() {
           {/* Right side images - 4 images stacked in depth */}
           <div
             ref={floatingImage2Ref}
-            className="absolute top-[10%] right-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[17%] md:top-[10%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
             style={{ zIndex: 1 }}
           >
             {/* Image container 2 */}
@@ -649,7 +679,7 @@ function App() {
 
           <div
             ref={floatingImage4Ref}
-            className="absolute top-[15%] right-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[22%] md:top-[15%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
             style={{ zIndex: 2 }}
           >
             {/* Image container 4 */}
@@ -657,7 +687,7 @@ function App() {
 
           <div
             ref={floatingImage6Ref}
-            className="absolute top-[20%] right-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[27%] md:top-[20%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
             style={{ zIndex: 3 }}
           >
             {/* Image container 6 */}
@@ -665,14 +695,14 @@ function App() {
 
           <div
             ref={floatingImage8Ref}
-            className="absolute top-[25%] right-0 w-64 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[32%] md:top-[25%] right-0 w-64 h-50 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
             style={{ zIndex: 4 }}
           >
             {/* Image container 8 */}
           </div>
 
           {/* Centered Text - Behind floating images */}
-          <div className="text-center absolute left-0 right-0 flex items-center justify-center" style={{ zIndex: 0, top: '50vh', transform: 'translateY(-50%)' }}>
+          <div className="text-center absolute left-0 right-0 flex items-center justify-center top-[35%] md:top-[50vh]" style={{ zIndex: 0, transform: 'translateY(-50%)' }}>
             <div>
               <h3 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white/80">
                 Handcrafted
@@ -721,53 +751,54 @@ function App() {
       <div className="fixed inset-0 pointer-events-none w-full overflow-hidden" style={{ zIndex: 100 }}>
         <div
           ref={circleRef}
+          data-reveal-circle
           className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] rounded-full bg-[#FFEFB5]"
           style={{ zIndex: 100 }}
         ></div>
       </div>
 
-      {/* Services Section */}
-      <section ref={servicesRef} className="relative w-full md:h-screen bg-[#FFEFB5] p-6 overflow-hidden">
+      {/* Services Section - starts transparent, bg set after circle expands */}
+      <section id="services" ref={servicesRef} className="relative w-full md:h-screen p-6 overflow-hidden [scroll-snap-align:start]" style={{ backgroundColor: "transparent" }}>
         {/* Services Content */}
-        <div ref={servicesContentRef} className="relative z-10 opacity-0">
+        <div ref={servicesContentRef} data-services-content className="relative z-10 opacity-0">
           <div className="flex flex-row items-center gap-5">
             <div className="w-[16px] h-[16px] rounded-full bg-black z-10"></div>
             <p className="text-[16px] font-bold tracking-[4px] z-10">Services</p>
           </div>
           <div className="h-[20px]"></div>
           <div className="flex flex-col md:flex-row justify-between gap-3">
-            <div className="md:w-[25%]">
-              <div className="flex flex-row items-center ">
-                <h2 className="text-[16px]">Custom Curtain</h2>
+            <Link to="/services/custom-curtains" className="md:w-[25%] group cursor-pointer">
+              <div className="flex flex-row items-center">
+                <h2 className="text-[16px] group-hover:underline">Custom Curtain</h2>
                 <div className="w-[10px]"></div>
-                <CgArrowTopRight />
+                <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[50vh] bg-gray-400"></div>
-            </div>
-            <div className="md:w-[25%]">
-              <div className="flex flex-row items-center ">
-                <h2 className="text-[16px]">Installation</h2>
+              <div className="h-[50vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+            </Link>
+            <Link to="/services/installation" className="md:w-[25%] group cursor-pointer">
+              <div className="flex flex-row items-center">
+                <h2 className="text-[16px] group-hover:underline">Installation</h2>
                 <div className="w-[10px]"></div>
-                <CgArrowTopRight />
+                <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[40vh] bg-gray-400"></div>
-            </div>
-            <div className="md:w-[25%]">
-              <div className="flex flex-row items-center ">
-                <h2 className="text-[16px]">Consultation</h2>
+              <div className="h-[40vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+            </Link>
+            <Link to="/services/consultation" className="md:w-[25%] group cursor-pointer">
+              <div className="flex flex-row items-center">
+                <h2 className="text-[16px] group-hover:underline">Consultation</h2>
                 <div className="w-[10px]"></div>
-                <CgArrowTopRight />
+                <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[50vh] bg-gray-400"></div>
-            </div>
-            <div className="md:w-[25%]">
-              <div className="flex flex-row items-center ">
-                <h2 className="text-[16px]">Maintenance</h2>
+              <div className="h-[50vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+            </Link>
+            <Link to="/services/maintenance" className="md:w-[25%] group cursor-pointer">
+              <div className="flex flex-row items-center">
+                <h2 className="text-[16px] group-hover:underline">Maintenance</h2>
                 <div className="w-[10px]"></div>
-                <CgArrowTopRight />
+                <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[35vh] bg-gray-400"></div>
-            </div>
+              <div className="h-[35vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+            </Link>
           </div>
           <div className="h-[40px]"></div>
           <div>
@@ -1038,6 +1069,10 @@ function App() {
           </div>
         </div>
       </section>
+
+      <footer className="w-full p-6 bg-[#927C7C] text-white text-center">
+        <p>&copy; 2024 Alhua Curtains. All rights reserved.</p>
+      </footer>
     </div>
   )
 }
