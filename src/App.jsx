@@ -48,6 +48,9 @@ function App() {
   const contentRefs = useRef([]);
   const heroTitleRef = useRef(null);
   const heroSubtitleRef = useRef(null);
+  const heroImageRef = useRef(null);
+  const galleryTitleRef = useRef(null);
+  const gallerySubtitleRef = useRef(null);
   const [testimonialIndices, setTestimonialIndices] = useState([0, 1, 2, 3]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const dragInstanceRef = useRef(null);
@@ -146,6 +149,38 @@ function App() {
       gsap.fromTo(heroSubtitleRef.current,
         { yPercent: 100 },
         { yPercent: 0, duration: 1, ease: "power3.out", delay: 0.5 }
+      );
+    }
+
+    // Hero image parallax — image moves slower than scroll with a sluggish delay
+    if (heroImageRef.current) {
+      gsap.to(heroImageRef.current, {
+        yPercent: -20,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroImageRef.current.closest("section"),
+          start: "top top",
+          end: "bottom top",
+          scrub: 1.5, // 1.5s delay for the slug effect
+        }
+      });
+    }
+
+    // Gallery title slide-up reveal on scroll enter
+    if (galleryTitleRef.current && gallerySubtitleRef.current) {
+      gsap.fromTo(galleryTitleRef.current,
+        { yPercent: 100 },
+        {
+          yPercent: 0, duration: 1, ease: "power3.out",
+          scrollTrigger: { trigger: galleryRef.current, start: "top 80%", toggleActions: "play none none none" }
+        }
+      );
+      gsap.fromTo(gallerySubtitleRef.current,
+        { yPercent: 100 },
+        {
+          yPercent: 0, duration: 1, ease: "power3.out", delay: 0.2,
+          scrollTrigger: { trigger: galleryRef.current, start: "top 80%", toggleActions: "play none none none" }
+        }
       );
     }
 
@@ -650,6 +685,7 @@ function App() {
         {/* Mobile: Full background image, Desktop: Contained image */}
           <div className="absolute inset-0 md:top-12 md:inset-x-100 md:w-2/3 md:h-7/8">
             <img
+              ref={heroImageRef}
               src="src\assets\hero.jpg"
               alt="Curtain background"
               className="w-full h-full object-cover md:object-contain md:object-right"
@@ -677,11 +713,11 @@ function App() {
       {/* Gallery Section */}
       <section id="gallery" ref={galleryRef} className="relative w-full h-[200vh] bg-[#BEB9A9] p-6 overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start">
-          <div className="">
-            <h2 className="text-4xl md:text-6xl font-bold text-white  z-10">Made for lasting impression</h2>
+          <div className="overflow-hidden pb-3">
+            <h2 ref={galleryTitleRef} className="text-4xl md:text-6xl font-bold text-white  z-10">Made for lasting impression</h2>
           </div>
-          <div className="md:w-[30%] my-6 md:my-0">
-            <p className="tracking-[10px] md:tracking-[8px] leading-[30px] font-bold md:text-[16px]">Quality curtains. Great Design. Handmade with precision.</p>
+          <div className="md:w-[30%] my-6 md:my-0 overflow-hidden">
+            <p ref={gallerySubtitleRef} className="tracking-[10px] md:tracking-[8px] leading-[30px] font-bold md:text-[16px]">Quality curtains. Great Design. Handmade with precision.</p>
           </div>
         </div>
         <div className="flex flex-row items-center gap-5">
