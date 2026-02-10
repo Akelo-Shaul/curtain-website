@@ -632,9 +632,9 @@ function App() {
       <BottomNav />
 
       {/* Hero Section */}
-      <section className="relative w-full h-screen bg-[#927C7C]  p-6 overflow-hidden">
+      <section className="relative w-full h-screen bg-[#927C7C]  p-6 pt-16 overflow-hidden">
         {/* Mobile: Full background image, Desktop: Contained image */}
-          <div className="absolute inset-0 md:inset-x-100 md:w-2/3 md:h-7/8">
+          <div className="absolute inset-0 md:top-12 md:inset-x-100 md:w-2/3 md:h-7/8">
             <img
               src="src\assets\hero.jpg"
               alt="Curtain background"
@@ -647,7 +647,7 @@ function App() {
         {/* Content Wrapper */}
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div className="flex justify-between items-start">
-            <h2 className="text-5xl md:text-3xl font-bold text-white">Alhua</h2>
+            {/* <h2 className="text-5xl md:text-3xl font-bold text-white">Alhua</h2> */}
           </div>
           <div className="text-white">
             <h3 className="text-6xl md:text-8xl font-semibold">Ah Hulaker</h3>

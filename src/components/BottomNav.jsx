@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
@@ -9,8 +9,34 @@ gsap.registerPlugin(ScrollToPlugin, ScrollTrigger);
 
 const BottomNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const desktopNavRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const heroHeight = window.innerHeight;
+
+      // Always show in hero section
+      if (currentY <= heroHeight * 0.5) {
+        setNavHidden(false);
+      } else if (currentY > lastScrollY.current) {
+        // Scrolling down — hide
+        setNavHidden(true);
+      } else {
+        // Scrolling up — show
+        setNavHidden(false);
+      }
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = [
     { label: 'Gallery', target: '#gallery' },
@@ -93,7 +119,7 @@ const BottomNav = () => {
       {/* Hamburger Button - Mobile Only */}
       <button
         onClick={toggleMenu}
-        className="md:hidden fixed top-6 right-6 z-[300] flex flex-col justify-center items-center w-10 h-10"
+        className="md:hidden fixed top-4 right-6 z-[300] flex flex-col justify-center items-center w-10 h-10"
         style={{ mixBlendMode: 'difference' }}
         aria-label="Toggle menu"
       >
@@ -121,21 +147,47 @@ const BottomNav = () => {
         </ul>
       </nav>
 
-      {/* Desktop Bottom Navigation */}
-      <nav className="hidden md:block fixed bottom-0 left-0 right-0 z-[200] py-4 px-6" style={{ mixBlendMode: 'difference' }}>
-        <ul className="flex flex-row justify-center items-center gap-32 font-bold text-xl text-[#00FF64]">
-          {navItems.map((item) => (
-            <li key={item.label} className="nav-item">
-              <a
-                href={item.target}
-                onClick={(e) => handleNavClick(e, item.target)}
-                className="hover:opacity-70 transition-opacity cursor-pointer"
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+      {/* Desktop Top Navigation */}
+      <nav
+        ref={desktopNavRef}
+        className={`hidden md:block fixed top-0 left-0 right-0 z-[200] bg-[#e8e8e8] border-b border-[#d0d0d0] transition-transform duration-300 ease-in-out ${navHidden ? '-translate-y-full' : 'translate-y-0'}`}
+      >
+        <div className="flex items-center justify-between px-10 py-3">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              if (location.pathname !== '/') {
+                navigate('/');
+              } else {
+                gsap.killTweensOf(window);
+                window._navScrolling = true;
+                gsap.to(window, {
+                  duration: 1,
+                  scrollTo: { y: 0 },
+                  ease: "power2.inOut",
+                  onComplete: () => { window._navScrolling = false; }
+                });
+              }
+            }}
+            className="text-[#333] text-xl font-bold tracking-[3px] uppercase hover:opacity-70 transition-opacity"
+          >
+            Alhua
+          </a>
+          <ul className="flex items-center gap-12">
+            {navItems.map((item) => (
+              <li key={item.label}>
+                <a
+                  href={item.target}
+                  onClick={(e) => handleNavClick(e, item.target)}
+                  className="text-[#555] text-xs font-medium tracking-[3px] uppercase hover:text-[#111] transition-colors cursor-pointer"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </>,
     document.body
