@@ -8,6 +8,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Runs before any module scripts — prevent browser scroll restoration
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      // Strip hash on reload so the page always starts at the hero
+      if (location.hash) history.replaceState(null, '', location.pathname);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

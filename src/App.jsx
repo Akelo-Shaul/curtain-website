@@ -2,7 +2,7 @@ import BottomNav from "./components/BottomNav"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useRef, useState, useEffect } from "react";
-import { testimonials } from "./data/testimonials";
+import { testimonials, maleAvatars, femaleAvatars } from "./data/testimonials";
 import { Link, useLocation } from "react-router-dom";
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -12,11 +12,26 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { SplitText } from "gsap/SplitText";
 import { Draggable } from "gsap/Draggable";
 import { CgArrowTopRight } from "react-icons/cg";
+import serviceImg1 from "./assets/services/1.jpg";
+import serviceImg2 from "./assets/services/2.jpg";
+import serviceImg3 from "./assets/services/3.jpg";
+import serviceImg4 from "./assets/services/4.jpg";
 import { IoPeople } from "react-icons/io5";
 import { MdLocationPin } from "react-icons/md";
 import { FaTiktok, FaWhatsapp } from "react-icons/fa";
 
 gsap.registerPlugin(useGSAP,ScrollTrigger,ScrollSmoother,ScrollToPlugin,SplitText,Draggable);
+
+// Pick a consistent avatar per testimonial based on gender (pure function, no mutable state)
+function getAvatar(index) {
+  const t = testimonials[index];
+  const pool = t.gender === "male" ? maleAvatars : femaleAvatars;
+  let genderIndex = 0;
+  for (let i = 0; i < index; i++) {
+    if (testimonials[i].gender === t.gender) genderIndex++;
+  }
+  return pool[genderIndex % pool.length];
+}
 
 function App() {
   const location = useLocation();
@@ -50,21 +65,52 @@ function App() {
   const floatingImage7Ref = useRef(null);
   const floatingImage8Ref = useRef(null);
 
-  // Handle hash navigation from other pages
+  // Block the services snap from firing during page load.
+  // Set synchronously during render so it's true before any useGSAP runs.
+  const initialLoadRef = useRef(true);
+  if (initialLoadRef.current) {
+    window._initialLoad = true;
+  }
+
+  // Handle navigation and scroll reset after GSAP is fully initialized.
   useEffect(() => {
-    if (location.hash) {
+    if (location.hash && window._internalNavigation) {
+      // In-app navigation (e.g. back from service page) — scroll to the section
+      window._internalNavigation = false;
+      window._initialLoad = false;
+      initialLoadRef.current = false;
       const element = document.querySelector(location.hash);
       if (element) {
-        // Delay to ensure page is fully loaded
         setTimeout(() => {
+          window._navScrolling = true;
           gsap.to(window, {
             duration: 1,
-            scrollTo: { y: element, offsetY: 0 },
-            ease: "power2.inOut"
+            scrollTo: location.hash === '#services' && window.servicesRevealTl?.scrollTrigger?.end
+              ? { y: window.servicesRevealTl.scrollTrigger.end }
+              : { y: element, offsetY: 0 },
+            ease: "power2.inOut",
+            onComplete: () => { window._navScrolling = false; }
           });
         }, 100);
       }
+      return;
     }
+
+    // Reload / fresh load — force scroll to top after GSAP is fully initialized.
+    // Kill any in-flight scroll tweens (e.g. from the snap onEnter).
+    gsap.killTweensOf(window);
+    window.scrollTo(0, 0);
+
+    // Refresh triggers from position 0, then scroll to 0 once more.
+    ScrollTrigger.refresh();
+    window.scrollTo(0, 0);
+
+    // Clear the guard after GSAP has fully settled
+    const timer = setTimeout(() => {
+      window._initialLoad = false;
+      initialLoadRef.current = false;
+    }, 500);
+    return () => clearTimeout(timer);
   }, [location.hash]);
 
   // Handle viewport resize - refresh ScrollTrigger to recalculate positions
@@ -149,29 +195,26 @@ function App() {
     const rightImages = [floatingImage2Ref, floatingImage4Ref, floatingImage6Ref, floatingImage8Ref];
 
     // Left side images - start at center, expand outward to left edge
+    // Each container is 5% lower in CSS top, so offset y to align start positions
     leftImages.forEach((imgRef, index) => {
-      const startProgress = 0.8 + (index * 0.15); // Decreased stagger for more overlap
-
-      // Create multi-stage animation with blur at start and end only
+      const startProgress = 0.8 + (index * 0.15);
       tl.fromTo(imgRef.current,
         {
-          x: "150%", // Start at center horizontally
-          y: "0vh", // Start at center vertically (cone tip)
-          scale: 0.25, // Small at back
-          filter: "blur(8px)", // Slight depth blur
+          x: "150%",
+          y: `${-(index * 60)}px`,
+          scale: 0.25,
+          filter: "blur(8px)",
           opacity: 0
         },
         {
-          x: "-125%", // Move toward edge but still mostly visible
-          y: "10vh", // Slight upward movement
-          scale: 1.5,
-          // filter: "blur(0px)", // Sharp when visible
+          x: "-125%",
+          y: "1vh",
+          scale: 1.2,
           ease: "none",
           duration: 0.5
         },
         startProgress
       )
-      // Fade in opacity faster (reaches 1 at midpoint)
       .to(imgRef.current,
         {
           opacity: 1,
@@ -179,34 +222,30 @@ function App() {
           filter: "blur(0px)",
           ease: "none"
         },
-        startProgress // Start at same time as main animation
+        startProgress
       )
     });
 
     // Right side images - start at center, expand outward to right edge
     rightImages.forEach((imgRef, index) => {
-      const startProgress = 0.8 + (index * 0.15); // Stagger to show 3 at once
-
-      // Create multi-stage animation with blur at start and end only
+      const startProgress = 0.8 + (index * 0.15);
       tl.fromTo(imgRef.current,
         {
-          x: "-150%", // Start at center horizontally
-          y: "0vh", // Start at center vertically (cone tip)
-          scale: 0.25, // Small at back
-          filter: "blur(8px)", // Slight depth blur
+          x: "-150%",
+          y: `${-(index * 70)}px`,
+          scale: 0.25,
+          filter: "blur(8px)",
           opacity: 0
         },
         {
-          x: "100%", // Move toward edge but still mostly visible
-          y: "10vh", // Slight upward movement
+          x: "100%",
+          y: "1vh",
           scale: 0.8,
-          // filter: "blur(0px)", // Sharp when visible
           ease: "none",
           duration: 0.3
         },
         startProgress
       )
-      // Fade in opacity faster (reaches 1 at midpoint)
       .to(imgRef.current,
         {
           opacity: 1,
@@ -214,7 +253,7 @@ function App() {
           filter: "blur(0px)",
           ease: "none"
         },
-        startProgress // Start at same time as main animation
+        startProgress
       )
     });
 
@@ -230,7 +269,7 @@ function App() {
       scrollTrigger: {
         trigger: galleryRef.current,
         start: "top -60%",
-        end: "top -100%",
+        end: "top -150%",
         scrub: true,
       }
     });
@@ -265,11 +304,11 @@ function App() {
     // Snap services section to top when it comes into viewport
     ScrollTrigger.create({
       trigger: servicesRef.current,
-      start: "top bottom-=120",
+      start: "top bottom-=140",
       end: "top top",
       onEnter: () => {
-        // Skip snap if navigation is already scrolling programmatically
-        if (window._navScrolling) return;
+        // Skip snap during page load or programmatic navigation
+        if (window._navScrolling || window._initialLoad) return;
         gsap.to(window, {
           scrollTo: { y: servicesRef.current, offsetY: 0 },
           duration: 0.6,
@@ -618,7 +657,7 @@ function App() {
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" ref={galleryRef} className="relative w-full h-[180vh] bg-[#BEB9A9] p-6 overflow-hidden">
+      <section id="gallery" ref={galleryRef} className="relative w-full h-[200vh] bg-[#BEB9A9] p-6 overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start">
           <div className="">
             <h2 className="text-4xl md:text-6xl font-bold text-white  z-10">Made for lasting impression</h2>
@@ -641,67 +680,67 @@ function App() {
           {/* Left side images - 4 images stacked in depth */}
           <div
             ref={floatingImage1Ref}
-            className="absolute top-[17%] md:top-[10%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[17%] md:top-[10%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 1 }}
           >
-            {/* Image container 1 */}
+            <img src="src/assets/gallery/17.jpg" alt="Gallery 17" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage3Ref}
-            className="absolute top-[22%] md:top-[15%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[22%] md:top-[15%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 2 }}
           >
-            {/* Image container 3 */}
+            <img src="src/assets/gallery/19.jpg" alt="Gallery 19" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage5Ref}
-            className="absolute top-[27%] md:top-[20%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[27%] md:top-[20%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 3 }}
           >
-            {/* Image container 5 */}
+            <img src="src/assets/gallery/21.jpg" alt="Gallery 21" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage7Ref}
-            className="absolute top-[32%] md:top-[25%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-r-2xl will-change-transform"
+            className="absolute top-[32%] md:top-[25%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 4 }}
           >
-            {/* Image container 7 */}
+            <img src="src/assets/gallery/23.jpg" alt="Gallery 23" className="w-full h-full object-cover" />
           </div>
 
           {/* Right side images - 4 images stacked in depth */}
           <div
             ref={floatingImage2Ref}
-            className="absolute top-[17%] md:top-[10%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[17%] md:top-[10%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 1 }}
           >
-            {/* Image container 2 */}
+            <img src="src/assets/gallery/18.jpg" alt="Gallery 18" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage4Ref}
-            className="absolute top-[22%] md:top-[15%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[22%] md:top-[15%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 2 }}
           >
-            {/* Image container 4 */}
+            <img src="src/assets/gallery/20.jpg" alt="Gallery 20" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage6Ref}
-            className="absolute top-[27%] md:top-[20%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[27%] md:top-[20%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 3 }}
           >
-            {/* Image container 6 */}
+            <img src="src/assets/gallery/22.jpg" alt="Gallery 22" className="w-full h-full object-cover" />
           </div>
 
           <div
             ref={floatingImage8Ref}
-            className="absolute top-[32%] md:top-[25%] right-0 w-64 h-50 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 rounded-l-2xl will-change-transform"
+            className="absolute top-[32%] md:top-[25%] right-0 w-64 h-50 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 4 }}
           >
-            {/* Image container 8 */}
+            <img src="src/assets/gallery/24.jpg" alt="Gallery 24" className="w-full h-full object-cover" />
           </div>
 
           {/* Centered Text - Behind floating images */}
@@ -725,9 +764,9 @@ function App() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={`top-${i}`}
-                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 rounded-lg"
+                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 overflow-hidden"
                 >
-                  {/* Image will go here */}
+                  <img src={`src/assets/gallery/${i + 1}.jpg`} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -740,9 +779,9 @@ function App() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={`bottom-${i}`}
-                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 rounded-lg"
+                  className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 overflow-hidden"
                 >
-                  {/* Image will go here */}
+                  <img src={`src/assets/gallery/${i + 9}.jpg`} alt={`Gallery ${i + 9}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -756,7 +795,7 @@ function App() {
           ref={circleRef}
           data-reveal-circle
           className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] rounded-full bg-[#FFEFB5]"
-          style={{ zIndex: 100 }}
+          style={{ zIndex: 100, opacity: 0 }}
         ></div>
       </div>
 
@@ -776,7 +815,9 @@ function App() {
                 <div className="w-[10px]"></div>
                 <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[50vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+              <div className="h-[50vh] overflow-hidden group-hover:opacity-90 transition-opacity">
+                <img src={serviceImg1} alt="Custom Curtains" className="w-full h-full object-cover" />
+              </div>
             </Link>
             <Link to="/services/installation" className="md:w-[25%] group cursor-pointer">
               <div className="flex flex-row items-center">
@@ -784,7 +825,9 @@ function App() {
                 <div className="w-[10px]"></div>
                 <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[40vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+              <div className="h-[40vh] overflow-hidden group-hover:opacity-90 transition-opacity">
+                <img src={serviceImg2} alt="Installation" className="w-full h-full object-cover" />
+              </div>
             </Link>
             <Link to="/services/consultation" className="md:w-[25%] group cursor-pointer">
               <div className="flex flex-row items-center">
@@ -792,7 +835,9 @@ function App() {
                 <div className="w-[10px]"></div>
                 <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[50vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+              <div className="h-[50vh] overflow-hidden group-hover:opacity-90 transition-opacity">
+                <img src={serviceImg3} alt="Consultation" className="w-full h-full object-cover" />
+              </div>
             </Link>
             <Link to="/services/maintenance" className="md:w-[25%] group cursor-pointer">
               <div className="flex flex-row items-center">
@@ -800,7 +845,9 @@ function App() {
                 <div className="w-[10px]"></div>
                 <CgArrowTopRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </div>
-              <div className="h-[35vh] bg-gray-400 group-hover:opacity-90 transition-opacity"></div>
+              <div className="h-[35vh] overflow-hidden group-hover:opacity-90 transition-opacity">
+                <img src={serviceImg4} alt="Maintenance" className="w-full h-full object-cover" />
+              </div>
             </Link>
           </div>
           <div className="h-[40px]"></div>
@@ -880,8 +927,10 @@ function App() {
                     >
                       <div className="flex flex-row gap-4 items-center">
                         <div
-                          className={`w-[34px] h-[34px] rounded-full ${testimonial.color} transition-all duration-500`}
-                        ></div>
+                          className={`w-[34px] h-[34px] rounded-full ${testimonial.color} transition-all duration-500 overflow-hidden`}
+                        >
+                          <img src={getAvatar(testimonialIndex)} alt={testimonial.name} className="w-full h-full object-cover" />
+                        </div>
                         <p className="font-bold text-lg">
                           {testimonial.name}
                         </p>
@@ -925,8 +974,10 @@ function App() {
                   >
                     <div className="flex flex-row gap-4 items-center">
                       <div
-                        className={`w-[34px] h-[34px] rounded-full ${testimonial.color} transition-all duration-500`}
-                      ></div>
+                        className={`w-[34px] h-[34px] rounded-full ${testimonial.color} transition-all duration-500 overflow-hidden`}
+                      >
+                        <img src={getAvatar(testimonialIndex)} alt={testimonial.name} className="w-full h-full object-cover" />
+                      </div>
                       <p className="font-bold text-lg">
                         {testimonial.name}
                       </p>

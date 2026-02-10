@@ -26,6 +26,7 @@ const BottomNav = () => {
 
     // If not on home page, navigate to home first
     if (location.pathname !== '/') {
+      window._internalNavigation = true;
       navigate('/' + target);
       return;
     }

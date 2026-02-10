@@ -1,10 +1,16 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect } from "react";
 import { services } from "../data/services";
 import { CgArrowTopRight } from "react-icons/cg";
 
 function ServicePage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+
+  // Scroll to top when service page mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [serviceId]);
 
   const service = services[serviceId];
 
@@ -26,6 +32,7 @@ function ServicePage() {
   }
 
   const handleContactClick = () => {
+    window._internalNavigation = true;
     navigate("/#contact");
   };
 
@@ -33,7 +40,7 @@ function ServicePage() {
     <div className="w-full min-h-screen bg-white">
       {/* Header */}
       <header className="flex justify-between items-center p-6 md:px-12 lg:px-16">
-        <Link to="/" className="text-lg md:text-xl font-medium text-black hover:opacity-70 transition-opacity">
+        <Link to="/#services" onClick={() => { window._internalNavigation = true; }} className="text-lg md:text-xl font-medium text-black hover:opacity-70 transition-opacity">
           {service.title}
         </Link>
         <button
