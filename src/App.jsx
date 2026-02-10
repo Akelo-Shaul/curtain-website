@@ -46,6 +46,8 @@ function App() {
   const carouselRef = useRef(null);
   const carouselContainerRef = useRef(null);
   const contentRefs = useRef([]);
+  const heroTitleRef = useRef(null);
+  const heroSubtitleRef = useRef(null);
   const [testimonialIndices, setTestimonialIndices] = useState([0, 1, 2, 3]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const dragInstanceRef = useRef(null);
@@ -134,6 +136,18 @@ function App() {
     if (!galleryRef.current || !scrollRightRef.current || !scrollLeftRef.current || !centerTextRef.current ||
         !floatingImage1Ref.current || !floatingImage2Ref.current || !floatingImage3Ref.current || !floatingImage4Ref.current ||
         !floatingImage5Ref.current || !floatingImage6Ref.current || !floatingImage7Ref.current || !floatingImage8Ref.current) return;
+
+    // Hero text slide-up reveal
+    if (heroTitleRef.current && heroSubtitleRef.current) {
+      gsap.fromTo(heroTitleRef.current,
+        { yPercent: 100 },
+        { yPercent: 0, duration: 1, ease: "power3.out", delay: 0.3 }
+      );
+      gsap.fromTo(heroSubtitleRef.current,
+        { yPercent: 100 },
+        { yPercent: 0, duration: 1, ease: "power3.out", delay: 0.5 }
+      );
+    }
 
     // Calculate scroll distance (8 images worth of scrolling)
     const imageWidth = window.innerWidth >= 768 ? 320 : 256; // md:w-80 : w-64
@@ -650,8 +664,12 @@ function App() {
             {/* <h2 className="text-5xl md:text-3xl font-bold text-white">Alhua</h2> */}
           </div>
           <div className="text-white">
-            <h3 className="text-6xl md:text-8xl font-semibold">Ah Hulaker</h3>
-            <p className="md:text-3xl md:mb-16">Exclusive Modern Drawer Curtains</p>
+            <div className="overflow-hidden">
+              <h3 ref={heroTitleRef} className="text-6xl md:text-8xl font-semibold">Ah Hulaker</h3>
+            </div>
+            <div className="overflow-hidden">
+              <p ref={heroSubtitleRef} className="md:text-3xl md:mb-16">Exclusive Modern Drawer Curtains</p>
+            </div>
           </div>
         </div>
       </section>
