@@ -51,6 +51,9 @@ function App() {
   const heroImageRef = useRef(null);
   const galleryTitleRef = useRef(null);
   const gallerySubtitleRef = useRef(null);
+  const testimonialSectionRef = useRef(null);
+  const customCursorRef = useRef(null);
+  const [cursorState, setCursorState] = useState('idle'); // 'idle' | 'left' | 'right'
   const [testimonialIndices, setTestimonialIndices] = useState([0, 1, 2, 3]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const dragInstanceRef = useRef(null);
@@ -132,6 +135,68 @@ function App() {
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimeout);
+    };
+  }, []);
+
+  // Custom cursor for testimonials carousel area
+  useEffect(() => {
+    const carousel = carouselContainerRef.current;
+    const cursor = customCursorRef.current;
+    const section = testimonialSectionRef.current;
+    if (!carousel || !cursor || !section) return;
+
+    let mouseDown = false;
+    let startX = 0;
+
+    const onMouseMove = (e) => {
+      gsap.set(cursor, { x: 0, y: 0 }); // reset any GSAP transforms
+      gsap.to(cursor, {
+        left: e.clientX - 32,
+        top: e.clientY - 32,
+        duration: 0.15,
+        ease: "power2.out",
+        overwrite: true
+      });
+    };
+
+    const onMouseEnter = () => { cursor.style.opacity = '1'; };
+    const onMouseLeave = () => {
+      cursor.style.opacity = '0';
+      setCursorState('idle');
+      mouseDown = false;
+    };
+
+    const onMouseDown = (e) => {
+      mouseDown = true;
+      startX = e.clientX;
+    };
+
+    const onMouseMoveDirection = (e) => {
+      if (!mouseDown) return;
+      const diff = e.clientX - startX;
+      if (diff > 10) setCursorState('right');
+      else if (diff < -10) setCursorState('left');
+    };
+
+    const onMouseUp = () => {
+      mouseDown = false;
+      setCursorState('idle');
+    };
+
+    carousel.addEventListener('mousemove', onMouseMove);
+    carousel.addEventListener('mousemove', onMouseMoveDirection);
+    carousel.addEventListener('mouseenter', onMouseEnter);
+    carousel.addEventListener('mouseleave', onMouseLeave);
+    carousel.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      carousel.removeEventListener('mousemove', onMouseMove);
+      carousel.removeEventListener('mousemove', onMouseMoveDirection);
+      carousel.removeEventListener('mouseenter', onMouseEnter);
+      carousel.removeEventListener('mouseleave', onMouseLeave);
+      carousel.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mouseup', onMouseUp);
     };
   }, []);
 
@@ -944,7 +1009,27 @@ function App() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="p-6 h-screen flex flex-col justify-center overflow-hidden">
+      {/* Custom Cursor - outside section to avoid overflow-hidden clipping */}
+      <div
+        ref={customCursorRef}
+        className="hidden md:flex pointer-events-none fixed z-[300] w-16 h-16 rounded-full bg-[#d4d4d4] items-center justify-center"
+        style={{ opacity: 0 }}
+      >
+        <div className={`flex items-center gap-0.5 ${cursorState === 'left' ? 'rotate-180' : ''}`}>
+          {[0, 1, 2].map((i) => (
+            <svg
+              key={i}
+              width="7" height="22" viewBox="0 0 7 22" fill="none"
+              className={cursorState !== 'idle' ? 'animate-pulse' : ''}
+              style={cursorState !== 'idle' ? { animationDelay: `${i * 150}ms` } : {}}
+            >
+              <path d="M1 1L5.5 11L1 21" stroke={cursorState !== 'idle' ? '#B85C38' : '#222'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ))}
+        </div>
+      </div>
+
+      <section id="testimonials" ref={testimonialSectionRef} className="p-6 h-screen flex flex-col justify-center overflow-hidden relative">
         <div className="flex flex-row items-center gap-5">
           <div className="w-[16px] h-[16px] rounded-full bg-black z-10"></div>
           <p className="text-[16px] font-bold tracking-[4px] z-10">Testimonials</p>
@@ -956,10 +1041,10 @@ function App() {
         <div className="h-[40px]"></div>
 
         {/* Carousel Container */}
-        <div className="relative w-full flex items-center justify-center py-8 overflow-hidden">
+        <div className="relative w-full flex items-center justify-center py-8 overflow-hidden md:cursor-none">
           <div
             ref={carouselContainerRef}
-            className="flex items-center justify-center gap-6"
+            className="flex items-center justify-center gap-6 md:cursor-none"
           >
             {/* Mobile: Show 1 card centered */}
             <div className="md:hidden">
@@ -968,7 +1053,7 @@ function App() {
                 return (
                   <div
                     key="mobile-card"
-                    className="rounded-lg bg-gray-200 p-6 mx-auto overflow-hidden"
+                    className="rounded-lg bg-gray-200 p-6 mx-auto overflow-hidden md:!cursor-none"
                     style={{
                       width: '90vw',
                       maxWidth: '350px',
@@ -977,7 +1062,7 @@ function App() {
                   >
                     <div
                       ref={el => contentRefs.current[0] = el}
-                      className="transition-opacity duration-500 cursor-grab active:cursor-grabbing touch-none select-none"
+                      className="transition-opacity duration-500 md:!cursor-none cursor-grab active:cursor-grabbing touch-none select-none"
                     >
                       <div className="flex flex-row gap-4 items-center">
                         <div
@@ -1016,7 +1101,7 @@ function App() {
               return (
                 <div
                   key={`desktop-card-${cardPosition}`}
-                  className={`hidden md:block rounded-lg bg-gray-200 p-6 flex-shrink-0 relative transition-all duration-500 ${scaleValue} ${opacityValue} overflow-hidden`}
+                  className={`hidden md:block rounded-lg bg-gray-200 p-6 flex-shrink-0 relative transition-all duration-500 ${scaleValue} ${opacityValue} overflow-hidden md:!cursor-none`}
                   style={{
                     width: widthValue,
                     minWidth: widthValue
@@ -1024,7 +1109,7 @@ function App() {
                 >
                   <div
                     ref={el => contentRefs.current[cardPosition + 1] = el}
-                    className="transition-opacity duration-500 cursor-grab active:cursor-grabbing touch-none select-none"
+                    className="transition-opacity duration-500 md:!cursor-none cursor-grab active:cursor-grabbing touch-none select-none"
                   >
                     <div className="flex flex-row gap-4 items-center">
                       <div
