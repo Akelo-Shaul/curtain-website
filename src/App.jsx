@@ -1,4 +1,4 @@
-import BottomNav from "./components/BottomNav"
+import BottomNav from "./components/nav"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useRef, useState, useEffect } from "react";
