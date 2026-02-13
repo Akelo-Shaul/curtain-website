@@ -169,6 +169,7 @@ function App() {
     const onMouseDown = (e) => {
       mouseDown = true;
       startX = e.clientX;
+      setCursorState('grab');
     };
 
     const onMouseMoveDirection = (e) => {
@@ -518,9 +519,17 @@ function App() {
           clearInterval(autoPlayInterval);
           isDragging = true;
           dragStartX = this.x;
+          setCursorState('grab');
         },
         onDrag: function() {
           const currentDragX = this.x;
+
+          // Update cursor direction based on drag movement
+          if (currentDragX > dragStartX + 5) {
+            setCursorState('right');
+          } else if (currentDragX < dragStartX - 5) {
+            setCursorState('left');
+          }
 
           // Sync all card contents to move together in the same direction
           contentRefs.current.forEach((el, idx) => {
@@ -530,6 +539,7 @@ function App() {
           });
         },
         onRelease: function() {
+          setCursorState('idle');
           const dragDistance = this.x - dragStartX;
           isDragging = false;
 
@@ -1020,8 +1030,10 @@ function App() {
             <svg
               key={i}
               width="7" height="22" viewBox="0 0 7 22" fill="none"
-              className={cursorState !== 'idle' ? 'animate-pulse' : ''}
-              style={cursorState !== 'idle' ? { animationDelay: `${i * 150}ms` } : {}}
+              style={cursorState !== 'idle' ? {
+                animation: 'cursor-wave 0.6s ease-in-out infinite',
+                animationDelay: `${i * 150}ms`
+              } : {}}
             >
               <path d="M1 1L5.5 11L1 21" stroke={cursorState !== 'idle' ? '#B85C38' : '#222'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -1263,8 +1275,14 @@ function App() {
         </div>
       </section>
 
-      <footer className="w-full p-6 bg-[#927C7C] text-white text-center">
-        <p>&copy; 2024 Alhua Curtains. All rights reserved.</p>
+      <footer className="w-full p-6 bg-[#927C7C] text-white relative">
+        <p className="text-center">&copy; 2024 Alhua Curtains. All rights reserved.</p>
+        <div className="absolute bottom-4 right-6 flex items-center gap-2">
+          <span className="text-xs text-white/70">Designed by</span>
+          <a href="https://github.com/Akelo-Shaul" target="_blank" rel="noopener noreferrer">
+            <img src="src/assets/designer/shaul.gif" alt="Shaul" className="w-6 h-6 rounded-full hover:opacity-80 transition-opacity" />
+          </a>
+        </div>
       </footer>
     </div>
   )

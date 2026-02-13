@@ -177,13 +177,23 @@ const BottomNav = () => {
           <ul className="flex items-center gap-12">
             {navItems.map((item) => (
               <li key={item.label}>
-                <a
-                  href={item.target}
-                  onClick={(e) => handleNavClick(e, item.target)}
-                  className="text-[#555] text-xs font-medium tracking-[3px] uppercase hover:text-[#111] transition-colors cursor-pointer"
-                >
-                  {item.label}
-                </a>
+                {item.target === '#contact' ? (
+                  <a
+                    href={item.target}
+                    onClick={(e) => handleNavClick(e, item.target)}
+                    className="text-white text-xs font-medium tracking-[3px] uppercase bg-[#927C7C] px-5 py-2 rounded hover:bg-[#7d6969] transition-colors cursor-pointer"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <a
+                    href={item.target}
+                    onClick={(e) => handleNavClick(e, item.target)}
+                    className="text-[#555] text-xs font-medium tracking-[3px] uppercase hover:text-[#111] transition-colors cursor-pointer"
+                  >
+                    {item.label}
+                  </a>
+                )}
               </li>
             ))}
           </ul>
