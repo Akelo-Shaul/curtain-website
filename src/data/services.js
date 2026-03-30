@@ -1,32 +1,32 @@
 // Hero images (root services folder)
-import img1 from "../assets/services/1.jpg";
-import img2 from "../assets/services/2.jpg";
-import img3 from "../assets/services/3.jpg";
-import img4 from "../assets/services/4.jpg";
+const img1 = "/services/1.jpg";
+const img2 = "/services/2.jpg";
+const img3 = "/services/3.jpg";
+const img4 = "/services/4.jpg";
 
 // Custom Curtains subfolder
-import cc1 from "../assets/services/custom-curtains/1.jpg";
-import cc2 from "../assets/services/custom-curtains/2.jpg";
-import cc3 from "../assets/services/custom-curtains/3.jpg";
-import cc4 from "../assets/services/custom-curtains/4.jpg";
+const cc1 = "/services/custom-curtains/1.jpg";
+const cc2 = "/services/custom-curtains/2.jpg";
+const cc3 = "/services/custom-curtains/3.jpg";
+const cc4 = "/services/custom-curtains/4.jpg";
 
 // Installation subfolder
-import inst1 from "../assets/services/installation/1.jpg";
-import inst2 from "../assets/services/installation/2.jpg";
-import inst3 from "../assets/services/installation/3.jpg";
-import inst4 from "../assets/services/installation/4.jpg";
+const inst1 = "/services/installation/1.jpg";
+const inst2 = "/services/installation/2.jpg";
+const inst3 = "/services/installation/3.jpg";
+const inst4 = "/services/installation/4.jpg";
 
 // Consultation subfolder
-import cons1 from "../assets/services/consultation/1.jpg";
-import cons2 from "../assets/services/consultation/2.jpg";
-import cons3 from "../assets/services/consultation/3.jpg";
-import cons4 from "../assets/services/consultation/4.jpg";
+const cons1 = "/services/consultation/1.jpg";
+const cons2 = "/services/consultation/2.jpg";
+const cons3 = "/services/consultation/3.jpg";
+const cons4 = "/services/consultation/4.jpg";
 
 // Maintenance subfolder
-import maint1 from "../assets/services/maintenance/1.jpg";
-import maint2 from "../assets/services/maintenance/2.jpg";
-import maint3 from "../assets/services/maintenance/3.jpg";
-import maint4 from "../assets/services/maintenance/4.jpg";
+const maint1 = "/services/maintenance/1.jpg";
+const maint2 = "/services/maintenance/2.jpg";
+const maint3 = "/services/maintenance/3.jpg";
+const maint4 = "/services/maintenance/4.jpg";
 
 export const services = {
   "custom-curtains": {

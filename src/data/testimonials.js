@@ -1,12 +1,12 @@
-import avatar1 from "../assets/avatars/1.png";
-import avatar2 from "../assets/avatars/2.png";
-import avatar3 from "../assets/avatars/3.png";
-import avatar4 from "../assets/avatars/4.png";
-import avatar5 from "../assets/avatars/5.png";
-import avatar6 from "../assets/avatars/6.png";
-import avatar7 from "../assets/avatars/7.png";
-import avatar8 from "../assets/avatars/8.png";
-import avatar9 from "../assets/avatars/9.png";
+const avatar1 = "/avatars/1.png";
+const avatar2 = "/avatars/2.png";
+const avatar3 = "/avatars/3.png";
+const avatar4 = "/avatars/4.png";
+const avatar5 = "/avatars/5.png";
+const avatar6 = "/avatars/6.png";
+const avatar7 = "/avatars/7.png";
+const avatar8 = "/avatars/8.png";
+const avatar9 = "/avatars/9.png";
 
 export const maleAvatars = [avatar2, avatar4, avatar6, avatar8];
 export const femaleAvatars = [avatar1, avatar3, avatar5, avatar7, avatar9];

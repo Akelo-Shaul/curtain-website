@@ -12,13 +12,14 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { SplitText } from "gsap/SplitText";
 import { Draggable } from "gsap/Draggable";
 import { CgArrowTopRight } from "react-icons/cg";
-import serviceImg1 from "./assets/services/1.jpg";
-import serviceImg2 from "./assets/services/2.jpg";
-import serviceImg3 from "./assets/services/3.jpg";
-import serviceImg4 from "./assets/services/4.jpg";
+const serviceImg1 = "/services/1.jpg";
+const serviceImg2 = "/services/2.jpg";
+const serviceImg3 = "/services/3.jpg";
+const serviceImg4 = "/services/4.jpg";
 import { IoPeople } from "react-icons/io5";
 import { MdLocationPin } from "react-icons/md";
 import { FaTiktok, FaWhatsapp } from "react-icons/fa";
+import { CiLocationOn } from "react-icons/ci";
 
 gsap.registerPlugin(useGSAP,ScrollTrigger,ScrollSmoother,ScrollToPlugin,SplitText,Draggable);
 
@@ -32,6 +33,28 @@ function getAvatar(index) {
   }
   return pool[genderIndex % pool.length];
 }
+
+// Google Ad Component
+const GoogleAd = ({ slotId }) => {
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+  }, []);
+
+  return (
+    <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]">
+      <ins className="adsbygoogle"
+           style={{ display: 'block', width: '100%', height: '100%' }}
+           data-ad-client="ca-pub-5747363774831713"
+           data-ad-slot={slotId}
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+  );
+};
 
 function App() {
   const location = useLocation();
@@ -62,6 +85,11 @@ function App() {
   const adSectionRef = useRef(null);
   const adContainerRef = useRef(null);
   const skipAdButtonRef = useRef(null);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0); // 0 = first ad, 1 = second ad
+  const [adsCompleted, setAdsCompleted] = useState(false); // both ads shown
+  // WhatsApp click-to-chat (replace with your number/message)
+  const whatsappNumber = "254115089122"; // e.g. 254712345678 (country code + number, no plus)
+  const whatsappMessage = "Hello, I'm interested in your curtains. Can we chat?";
 
   // 8 floating images - 4 on left side, 4 on right side of the cone
   const floatingImage1Ref = useRef(null);
@@ -704,7 +732,7 @@ function App() {
 
   // Ad section scroll animation
   useGSAP(() => {
-    if (!adSectionRef.current || !adContainerRef.current || !skipAdButtonRef.current) return;
+    if (!adSectionRef.current || !adContainerRef.current || !skipAdButtonRef.current || adsCompleted) return;
 
     // Set initial state - full container, no border radius, button hidden
     gsap.set(adContainerRef.current, {
@@ -732,10 +760,10 @@ function App() {
 
     // Animate container to inset with rounded corners
     adTl.to(adContainerRef.current, {
-      borderRadius: "2rem",
-      margin: "3rem",
-      width: "calc(100% - 6rem)",
-      height: "calc(100% - 6rem)",
+      borderRadius: "4rem",
+      margin: "4rem",
+      width: "calc(100% - 8rem)",
+      height: "calc(100% - 8rem)",
       ease: "power2.out",
       duration: 1
     });
@@ -748,7 +776,7 @@ function App() {
       duration: 0.5
     }, "-=0.5"); // Start slightly before container animation ends
 
-  }, []);
+  }, [adsCompleted]);
 
   return (
     <div className="w-full">
@@ -761,7 +789,7 @@ function App() {
           <div className="absolute inset-0 md:top-12 md:inset-x-100 md:w-2/3 md:h-7/8">
             <img
               ref={heroImageRef}
-              src="src\assets\hero.jpg"
+              src="/hero.jpg"
               alt="Curtain background"
               className="w-full h-full object-cover md:object-contain md:object-right"
             />
@@ -812,7 +840,7 @@ function App() {
             className="absolute top-[17%] md:top-[10%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 1 }}
           >
-            <img src="src/assets/gallery/17.jpg" alt="Gallery 17" className="w-full h-full object-cover" />
+            <img src="/gallery/17.jpg" alt="Gallery 17" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -820,7 +848,7 @@ function App() {
             className="absolute top-[22%] md:top-[15%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 2 }}
           >
-            <img src="src/assets/gallery/19.jpg" alt="Gallery 19" className="w-full h-full object-cover" />
+            <img src="/gallery/19.jpg" alt="Gallery 19" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -828,7 +856,7 @@ function App() {
             className="absolute top-[27%] md:top-[20%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 3 }}
           >
-            <img src="src/assets/gallery/21.jpg" alt="Gallery 21" className="w-full h-full object-cover" />
+            <img src="/gallery/21.jpg" alt="Gallery 21" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -836,7 +864,7 @@ function App() {
             className="absolute top-[32%] md:top-[25%] left-0 w-54 h-70 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 4 }}
           >
-            <img src="src/assets/gallery/23.jpg" alt="Gallery 23" className="w-full h-full object-cover" />
+            <img src="/gallery/23.jpg" alt="Gallery 23" className="w-full h-full object-cover" />
           </div>
 
           {/* Right side images - 4 images stacked in depth */}
@@ -845,7 +873,7 @@ function App() {
             className="absolute top-[17%] md:top-[10%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 1 }}
           >
-            <img src="src/assets/gallery/18.jpg" alt="Gallery 18" className="w-full h-full object-cover" />
+            <img src="/gallery/18.jpg" alt="Gallery 18" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -853,7 +881,7 @@ function App() {
             className="absolute top-[22%] md:top-[15%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 2 }}
           >
-            <img src="src/assets/gallery/20.jpg" alt="Gallery 20" className="w-full h-full object-cover" />
+            <img src="/gallery/20.jpg" alt="Gallery 20" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -861,7 +889,7 @@ function App() {
             className="absolute top-[27%] md:top-[20%] right-0 w-54 h-80 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 3 }}
           >
-            <img src="src/assets/gallery/22.jpg" alt="Gallery 22" className="w-full h-full object-cover" />
+            <img src="/gallery/22.jpg" alt="Gallery 22" className="w-full h-full object-cover" />
           </div>
 
           <div
@@ -869,7 +897,7 @@ function App() {
             className="absolute top-[32%] md:top-[25%] right-0 w-64 h-50 md:w-80 md:h-96 lg:w-96 lg:h-[500px] bg-gray-400 will-change-transform overflow-hidden"
             style={{ zIndex: 4 }}
           >
-            <img src="src/assets/gallery/24.jpg" alt="Gallery 24" className="w-full h-full object-cover" />
+            <img src="/gallery/24.jpg" alt="Gallery 24" className="w-full h-full object-cover" />
           </div>
 
           {/* Centered Text - Behind floating images */}
@@ -895,7 +923,7 @@ function App() {
                   key={`top-${i}`}
                   className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 overflow-hidden"
                 >
-                  <img src={`src/assets/gallery/${i + 1}.jpg`} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={`/gallery/${i + 1}.jpg`} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -910,7 +938,7 @@ function App() {
                   key={`bottom-${i}`}
                   className="flex-shrink-0 w-64 h-64 md:w-70 md:h-50 bg-gray-300 overflow-hidden"
                 >
-                  <img src={`src/assets/gallery/${i + 9}.jpg`} alt={`Gallery ${i + 9}`} className="w-full h-full object-cover" />
+                  <img src={`/gallery/${i + 9}.jpg`} alt={`Gallery ${i + 9}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -1152,35 +1180,59 @@ function App() {
 
       </section>
 
-      {/* Ad Section - Full to inset on scroll */}
-      <section
-        ref={adSectionRef}
-        className="relative w-full h-screen bg-[#FFEFB5] overflow-hidden"
-      >
-        {/* Skip Ad Button */}
-        <button
-          ref={skipAdButtonRef}
-          className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-[#FFEFB5] text-black px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
+      {/* Ad Section - Full to inset on scroll - Two ads with skip */}
+      {!adsCompleted && (
+        <section
+          ref={adSectionRef}
+          className="relative w-full h-screen bg-[#FFEFB5] overflow-hidden"
         >
-          <span className="text-sm font-medium">Skip ad</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="currentColor"
+          {/* Skip Ad Button */}
+          <button
+            ref={skipAdButtonRef}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              if (currentAdIndex === 0) {
+                // Skip first ad, move to second ad
+                setCurrentAdIndex(1);
+              } else {
+                // Skip second ad, mark ads as completed
+                setAdsCompleted(true);
+              }
+            }}
+            className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-[#FFEFB5] text-black px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
           >
-            <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v6.62c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L5.055 7.061zM19.5 12.75a.75.75 0 00-.75-.75H16.5a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75zm-3-3a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75zm0 6a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75z" />
-          </svg>
-        </button>
+            <span className="text-sm font-medium">Skip ad</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v6.62c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L5.055 7.061zM19.5 12.75a.75.75 0 00-.75-.75H16.5a.75.75 0 000 1.5h2.25a.75.75 0 00.75-.75zm-3-3a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75zm0 6a.75.75 0 00-.75-.75h-1.5a.75.75 0 000 1.5h1.5a.75.75 0 00.75-.75z" />
+            </svg>
+          </button>
 
-        {/* Ad Container - animates from full to inset */}
-        <div
-          ref={adContainerRef}
-          className="absolute inset-0 bg-[#B85C38]"
-        >
-          {/* Ad content goes here */}
-        </div>
-      </section>
+          {/* Ad Counter Badge */}
+          <div className="absolute top-6 left-6 z-20 bg-black text-white px-3 py-1 rounded-full text-xs font-medium">
+            Ad {currentAdIndex + 1}/2
+          </div>
+
+          {/* Ad Container - animates from full to inset */}
+          <div
+            ref={adContainerRef}
+            className="absolute inset-0 bg-[#B85C38] flex items-center justify-center overflow-hidden"
+          >
+            {currentAdIndex === 0 ? (
+              /* FIRST AD - Google AdSense Display/Video Ad */
+              <GoogleAd slotId="8509598958" />
+            ) : (
+              /* SECOND AD - Google AdSense Display/Video Ad */
+              <GoogleAd slotId="8509598958" />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Contact Section */}
       <section id="contact" className="p-6 py-12 bg-[#BEB9A9]">
@@ -1200,13 +1252,27 @@ function App() {
               <p className="text-base mb-8">
                 Tell us how we can upgrade your space into something elegant
               </p>
+              <div className="flex flex-row items-center gap-2 mb-4">
+                <CiLocationOn className="inline mr-2" />
+                <p>Nairobi, Kenya</p>
+              </div>
             </div>
             {/* Social Icons */}
             <div className="flex flex-row gap-6">
-              <a href="#" className="text-black hover:opacity-70 transition-opacity">
+              <a
+                href="https://www.tiktok.com/@yourshopname"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black hover:opacity-70 transition-opacity"
+              >
                 <FaTiktok size={30} />
               </a>
-              <a href="#" className="text-black hover:opacity-70 transition-opacity">
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black hover:opacity-70 transition-opacity"
+              >
                 <FaWhatsapp size={30} />
               </a>
             </div>
@@ -1280,7 +1346,7 @@ function App() {
         <div className="absolute bottom-4 right-6 flex items-center gap-2">
           <span className="text-xs text-white/70">Designed by</span>
           <a href="https://github.com/Akelo-Shaul" target="_blank" rel="noopener noreferrer">
-            <img src="src/assets/designer/shaul.gif" alt="Shaul" className="w-6 h-6 rounded-full hover:opacity-80 transition-opacity" />
+            <img src="/designer/shaul.gif" alt="Shaul" className="w-6 h-6 rounded-full hover:opacity-80 transition-opacity" />
           </a>
         </div>
       </footer>
