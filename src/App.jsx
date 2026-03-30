@@ -47,7 +47,7 @@ const GoogleAd = ({ slotId }) => {
   return (
     <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-[inherit]">
       <ins className="adsbygoogle"
-           style={{ display: 'block', width: '100%', height: '100%' }}
+           style={{ display: 'block', width: '100%', height: '100%', minHeight: '280px' }}
            data-ad-client="ca-pub-5747363774831713"
            data-ad-slot={slotId}
            data-ad-format="auto"
@@ -1192,12 +1192,15 @@ function App() {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               if (currentAdIndex === 0) {
                 // Skip first ad, move to second ad
                 setCurrentAdIndex(1);
               } else {
                 // Skip second ad, mark ads as completed
                 setAdsCompleted(true);
+                // Ensure scroll is at top when entering main site
+                window.scrollTo(0, 0);
               }
             }}
             className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-[#FFEFB5] text-black px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow"
@@ -1221,6 +1224,7 @@ function App() {
           {/* Ad Container - animates from full to inset */}
           <div
             ref={adContainerRef}
+            style={{ borderRadius: '0rem', margin: '0rem' }}
             className="absolute inset-0 bg-[#B85C38] flex items-center justify-center overflow-hidden"
           >
             {currentAdIndex === 0 ? (
